@@ -1,0 +1,50 @@
+{
+  "LADA": [
+    "Vesta",
+    "Granta",
+    "Niva Legend",
+    "Aura"
+  ],
+  "TOYOTA": [
+    "Camry",
+    "Corolla",
+    "Land Cruiser 300",
+    "RAV4"
+  ],
+  "BMW": [
+    "X5",
+    "3 Series",
+    "5 Series",
+    "i8"
+  ],
+  "MERCEDES-BENZ": [
+    "E-Class",
+    "S-Class",
+    "G-Class",
+    "C-Class"
+  ],
+  "KIA": [
+    "Rio",
+    "Sportage",
+    "Sorento",
+    "K5"
+  ],
+  "HYUNDAI": [
+    "Solaris",
+    "Tucson",
+    "Santa Fe",
+    "Sonata"
+  ],
+  "VOLKSWAGEN": [
+    "Polo",
+    "Tiguan",
+    "Passat",
+    "Arteon"
+  ],
+  "AUDI": [
+    "A6",
+    "Q7",
+    "Q8",
+    "A3"
+  ]
+}
