@@ -6,6 +6,19 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 
+import program.dto.CarDto;
+import program.parser.WorkFileParser;
+import program.util.CustomArrayList;
+import program.util.sort.BubbleSort;
+import program.util.sort.CarComparatorBuilder;
+import program.util.sort.InsertionSort;
+import program.util.sort.SelectionSort;
+import program.util.sort.SortStrategy;
+
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
  * Обработчик консольных команд пользователя.
  * Отвечает за разбор введённых команд, валидацию аргументов,
@@ -14,7 +27,7 @@ import java.util.Arrays;
 public class CommandProcessor {
     private static final String EXIT_COMMAND = "exit";
     private final CarFileGenerator carFileGenerator;
-    private final Path workFile;
+    private Path workFile;
     private Runnable pendingOverwriteAction;
 
     /**
@@ -52,19 +65,121 @@ public class CommandProcessor {
             case EXIT_COMMAND -> "EXIT";
             case "help" -> """
                     Доступные команды:
+                      file [имя_файла]                              - показать текущий или переключить рабочий файл
                       fill all [--append | --force]                 - заполнить всеми машинами из каталога
                       fill random <кол-во> [--append | --force]     - заполнить случайными машинами
                       fill car <марка> <модель> [--append | --force] - заполнить конкретной машиной
-                      sort [параметр]                               - отсортировать машины (в разработке)
+                      sort [алгоритм] <поле1> [поле2] [поле3]       - отсортировать файл по 1–3 полям (brand, model, power, year)
                       exit                                          - выход из приложения
-                    Флаги:
+                    Алгоритмы для sort (необязательно, по умолчанию bubble):
+                      bubble (пузырьком) | selection (выбором) | insertion (вставками)
+                    Флаги для fill:
                       --append  добавить новые машины в существующий файл без перезаписи
                       --force   перезаписать существующий файл без подтверждения
                     """;
+            case "file" -> handleFileCommand(rawParts);
             case "fill" -> handleFillCommand(rawParts);
-            case "sort" -> "[Заглушка] Команда сортировки находится в разработке.";
+            case "sort" -> handleSortCommand(rawParts);
             default -> "Неизвестная команда. Введите 'help' для просмотра списка команд.";
         };
+    }
+
+    /**
+     * Показывает текущий рабочий файл или переключает программу на новый файл в директории {@code data/}.
+     * Если расширение {@code .json} не указано, оно добавляется автоматически.
+     *
+     * @param rawParts массив слов введённой команды
+     * @return сообщение с информацией о текущем или новом рабочем файле
+     */
+    private String handleFileCommand(String[] rawParts) {
+        if (rawParts.length < 2) {
+            return "Текущий рабочий файл: " + workFile
+                    + (Files.exists(workFile) ? " (существует)" : " (ещё не создан)");
+        }
+
+        String fileName = rawParts[1].trim();
+
+        if (fileName.contains("..") || fileName.contains("/") || fileName.contains("\\")) {
+            return "Ошибка: укажите только имя файла без путей (например: file garage_1).";
+        }
+
+        if (!fileName.toLowerCase().endsWith(".json")) {
+            fileName += ".json";
+        }
+
+        Path parentDir = workFile.getParent() != null ? workFile.getParent() : Path.of("data");
+        this.workFile = parentDir.resolve(fileName);
+
+        String status = Files.exists(workFile)
+                ? "файл уже существует (можно сортировать или дописывать)."
+                : "новый файл (будет создан при выполнении команды 'fill').";
+
+        return "Рабочий файл переключён на '" + workFile + "' — " + status;
+    }
+
+
+    private String handleSortCommand(String[] rawParts) {
+        if (!Files.exists(workFile)) {
+            return "Ошибка: рабочий файл не найден. Сначала создайте его с помощью команды 'fill'.";
+        }
+
+        List<CarDto> cars = WorkFileParser.parseWorkFile(workFile);
+        if (cars.size() <= 1) {
+            return "Ошибка: для сортировки в файле должно быть больше одной машины (сейчас: " + cars.size() + ").";
+        }
+
+        if (rawParts.length < 2) {
+            return "Ошибка: укажите поля для сортировки (brand, model, year). Пример: sort brand year";
+        }
+
+        String firstArg = rawParts[1].toLowerCase();
+        SortStrategy<CarDto> sorter;
+        String algorithmName;
+        int fieldsStartIndex;
+
+        switch (firstArg) {
+            case "bubble", "пузырьком", "пузырек", "пузырёк" -> {
+                sorter = new BubbleSort<>();
+                algorithmName = "BubbleSort (пузырьком)";
+                fieldsStartIndex = 2;
+            }
+            case "selection", "выбором" -> {
+                sorter = new SelectionSort<>();
+                algorithmName = "SelectionSort (выбором)";
+                fieldsStartIndex = 2;
+            }
+            case "insertion", "вставками" -> {
+                sorter = new InsertionSort<>();
+                algorithmName = "InsertionSort (вставками)";
+                fieldsStartIndex = 2;
+            }
+            default -> {
+                sorter = new BubbleSort<>();
+                algorithmName = "BubbleSort (по умолчанию)";
+                fieldsStartIndex = 1;
+            }
+        }
+
+        List<String> fields = Arrays.stream(rawParts)
+                .skip(fieldsStartIndex)
+                .map(String::toLowerCase)
+                .collect(Collectors.toCollection(CustomArrayList::new));
+
+        if (fields.isEmpty() || fields.size() > 3) {
+            return "Ошибка: укажите от 1 до 3 полей для сортировки (brand, model, power, year). " +
+                    "Пример: sort brand power year";
+        }
+
+        try {
+            Comparator<CarDto> comparator = CarComparatorBuilder.build(fields);
+            sorter.sort(cars, comparator);
+            carFileGenerator.writeCarsToJsonFile(cars, workFile);
+
+            return "Успешно: файл отсортирован (" + algorithmName + ") по полям ["
+                    + String.join(" -> ", fields) + "] и перезаписан.";
+        } catch (IllegalArgumentException e) {
+            return "Ошибка: " + e.getMessage();
+        }
     }
 
     /**
