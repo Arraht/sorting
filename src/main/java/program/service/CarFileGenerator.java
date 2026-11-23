@@ -109,7 +109,7 @@ public class CarFileGenerator {
                 .build();
     }
 
-    private void writeCarsToJsonFile(List<CarDto> cars, Path targetFile) {
+    public void writeCarsToJsonFile(List<CarDto> cars, Path targetFile) {
         String json = cars.stream()
                 .map(car -> String.format("""
                           {
