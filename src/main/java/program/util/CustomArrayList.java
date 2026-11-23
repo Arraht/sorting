@@ -1,4 +1,4 @@
-package program.list;
+package program.util;
 
 import java.util.AbstractList;
 import java.util.Arrays;
