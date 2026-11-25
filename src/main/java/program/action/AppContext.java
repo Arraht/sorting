@@ -37,34 +37,3 @@ public class AppContext {
         this.activeAction = null;
     }
 }
-
-//public class AppContext {
-//    private final CarFileGenerator carFileGenerator;
-//    private Path workFile;
-//    private Runnable pendingOverwriteAction;
-//
-//    public AppContext(CarFileGenerator carFileGenerator, Path workFile) {
-//        this.carFileGenerator = carFileGenerator;
-//        this.workFile = workFile;
-//    }
-//
-//    public CarFileGenerator getCarFileGenerator() {
-//        return carFileGenerator;
-//    }
-//
-//    public Path getWorkFile() {
-//        return workFile;
-//    }
-//
-//    public void setWorkFile(Path workFile) {
-//        this.workFile = workFile;
-//    }
-//
-//    public Runnable getPendingOverwriteAction() {
-//        return pendingOverwriteAction;
-//    }
-//
-//    public void setPendingOverwriteAction(Runnable pendingOverwriteAction) {
-//        this.pendingOverwriteAction = pendingOverwriteAction;
-//    }
-//}
