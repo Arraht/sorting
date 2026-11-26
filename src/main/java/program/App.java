@@ -26,7 +26,9 @@ public class App {
             System.out.print("> ");
             String input = scanner.nextLine();
 
-            //logger.info("user input: " + input);
+            if (!input.trim().isEmpty()) {
+                logger.info("user input: " + input.trim());
+            }
 
             String response = commandProcessor.process(input);
 
