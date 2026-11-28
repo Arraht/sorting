@@ -130,6 +130,62 @@ public class CustomArrayList<E> extends AbstractList<E> {
             throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
         }
     }
+//Метод подсчета
+public int countOccurrencesParallel(E element, int threadCount) {
+    if (threadCount <= 0) {
+        throw new IllegalArgumentException("Количество потоков должно быть больше 0");
+    }
+
+    if (size == 0) {
+        System.out.println("Количество вхождений: 0");
+        return 0;
+    }
+
+    int actualThreads = Math.min(threadCount, size);
+    int partSize = (size + actualThreads - 1) / actualThreads;
+
+    Thread[] threads = new Thread[actualThreads];
+    int[] results = new int[actualThreads];
+
+    for (int i = 0; i < actualThreads; i++) {
+        final int threadIndex = i;
+        final int start = i * partSize;
+        final int end = Math.min(start + partSize, size);
+
+        threads[i] = new Thread(() -> {
+            int count = 0;
+
+            for (int j = start; j < end; j++) {
+                if (Objects.equals(elementData[j], element)) {
+                    count++;
+                }
+            }
+
+            results[threadIndex] = count;
+        });
+
+        threads[i].start();
+    }
+
+    for (Thread thread : threads) {
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Поток был прерван", e);
+        }
+    }
+
+    int totalCount = 0;
+
+    for (int result : results) {
+        totalCount += result;
+    }
+
+    System.out.println("Количество вхождений элемента " + element + ": " + totalCount);
+
+    return totalCount;
+}
 
     @Override
     public String toString() {

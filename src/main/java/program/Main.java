@@ -11,6 +11,7 @@ public class Main {
         Logger logger = new Logger();
         App app = null;
 
+        
         try {
             Path workFile = Path.of("data/user_cars.json");
             CarFileGenerator carFileGenerator = new CarFileGenerator();
