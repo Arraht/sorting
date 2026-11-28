@@ -14,6 +14,7 @@ public class ActionFactory {
         register("view", ViewAction::new);
         register("file", FileAction::new);
         register("fill", FillAction::new);
+        register("add", AddAction::new);
         register("sort", SortAction::new);
         register("cancel", CancelAction::new);
         register("exit", ExitAction::new);

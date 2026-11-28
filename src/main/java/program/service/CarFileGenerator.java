@@ -77,6 +77,53 @@ public class CarFileGenerator {
     }
 
     /**
+     * Создаёт автомобиль с указанными характеристиками, если такая марка и модель есть в каталоге.
+     * Регистр марки и модели не важен, в результате используется написание из каталога.
+     *
+     * @param brand      марка автомобиля
+     * @param model      модель автомобиля
+     * @param horsePower мощность в л.с.
+     * @param year       год выпуска
+     * @return автомобиль с написанием марки и модели из каталога
+     * @throws IllegalArgumentException если такой машины нет в каталоге
+     */
+    public CarDto createCatalogCar(String brand, String model, int horsePower, int year) {
+        return CarJsonParser.parseFromResources(CATALOG_FILE).stream()
+                .filter(brandDto -> brandDto.getBrand().equalsIgnoreCase(brand))
+                .flatMap(brandDto -> brandDto.getModels().stream()
+                        .filter(catalogModel -> catalogModel.equalsIgnoreCase(model))
+                        .map(catalogModel -> CarDto.builder()
+                                .brand(brandDto.getBrand())
+                                .model(catalogModel)
+                                .horsePower(horsePower)
+                                .year(year)
+                                .build()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "автомобиль '" + brand + " " + model + "' отсутствует в каталоге."));
+    }
+
+    /**
+     * Дописывает один автомобиль в конец рабочего файла (файл создаётся, если его нет).
+     *
+     * @param targetFile путь к целевому рабочему JSON-файлу
+     * @param car        автомобиль для добавления
+     */
+    public void addCar(Path targetFile, CarDto car) {
+        addCars(targetFile, List.of(car));
+    }
+
+    /**
+     * Дописывает список автомобилей в конец рабочего файла (файл создаётся, если его нет).
+     *
+     * @param targetFile путь к целевому рабочему JSON-файлу
+     * @param cars       автомобили для добавления
+     */
+    public void addCars(Path targetFile, List<CarDto> cars) {
+        saveCars(cars, targetFile, true);
+    }
+
+    /**
      * Возвращает поток всех возможных автомобилей из каталога со случайными характеристиками.
      */
     private Stream<CarDto> getAllCatalogCarsStream() {
